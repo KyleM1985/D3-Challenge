@@ -42,7 +42,7 @@ function makeResponsive() {
     //console.log(healthData);
 
     healthData.forEach(function(d) {
-      data.obesity = +d.obesity;
+      data.age = +d.age;
       data.smokes = +d.smokes;
     });
    // create scales
@@ -59,11 +59,11 @@ function makeResponsive() {
     var yMax;
     
     xMin = d3.min(healthData, function(data) {
-        return data.obesity;
+        return data.age;
     });
     
     xMax = d3.max(healthData, function(data) {
-        return data.obesity;
+        return data.age;
     });
     
     yMin = d3.min(healthData, function(data) {
@@ -93,7 +93,7 @@ function makeResponsive() {
       .enter()
       .append("circle")
       .classed("stateCircle", true)
-      .attr("cx", d => xLinearScale(d.obesity +1.5))
+      .attr("cx", d => xLinearScale(d.age +1.5))
       .attr("cy", d => yLinearScale(d.smokes +0.3))
       .attr("r", "15")
       .attr("fill", "blue")
@@ -106,7 +106,7 @@ function makeResponsive() {
     //Create text labels with state abbreviations for each circle
     circlesGroup.append("text")
       .classed("stateText", true)
-      .attr("x", d => xLinearScale(d.obesity))
+      .attr("x", d => xLinearScale(d.age))
       .attr("y", d => yLinearScale(d.smokes))
       .attr("stroke", "black")
       .attr("font-size", "10px")
@@ -141,7 +141,7 @@ function makeResponsive() {
     .enter()
     .append("tspan")
       .attr("x", function(data) {
-        return xLinearScale(data.obesity +1.3);
+        return xLinearScale(data.age +1.3);
       })
       .attr("y", function(data) {
         return yLinearScale(data.smokes +1);
