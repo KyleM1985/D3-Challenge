@@ -19,74 +19,141 @@ function makeResponsive() {
    left: 50
   };
 
+  var width = svgWidth - margin.left - margin.right;
   var height = svgHeight - margin.top - margin.bottom;
-  var width = svgHeight - margin.left - margin.right;
-
+  
    // Append SVG element
   var svg = d3
-    .select(".chart")
+    .select("body")
     .append("svg")
-    .attr("height", svgHeight)
-    .attr("width", svgWidth);
+    .attr("width", svgWidth)
+    .attr("height", svgHeight);
 
   // Append group element
-  var chartGroup = svg.append("g")
+  var chart = svg.append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`);
+    
+  d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
 
   // Read CSV
-  d3.csv("data.csv", function(err, stateData) {
+  d3.csv("data.csv", function(err, healthData) {
+    if (err) throw err;
 
+    //console.log(healthData);
+
+    healthData.forEach(function(d) {
+      data.obesity = +d.obesity;
+      data.smokes = +d.smokes;
+    });
    // create scales
-    var xTimeScale = d3.scaleTime()
-      .domain(d3.extent(stateData, d => d.obesity))
-      .range([0, width]);
-
-    var yLinearScale = d3.scaleLinear()
-      .domain([0, d3.max(stateData, d => d.smokes)])
-      .range([height, 0]); 
+    var xLinearScale = d3.scaleLinear().range([0, width]);
+    var yLinearScale = d3.scaleLinear().range([height, 0]);
 
     // create axes
-      var xAxis = d3.axisBottom(xTimeScale);
-      var yAxis = d3.axisLeft(yLinearScale).ticks(6);
+    var bottomAxis = d3.axisBottom(xLinearScale);
+    var leftAxis = d3.axisLeft(yLinearScale);
+
+    var xMin;
+    var xMax;
+    var yMin;
+    var yMax;
+    
+    xMin = d3.min(healthData, function(data) {
+        return data.obesity;
+    });
+    
+    xMax = d3.max(healthData, function(data) {
+        return data.obesity;
+    });
+    
+    yMin = d3.min(healthData, function(data) {
+        return data.smokes;
+    });
+    
+    yMax = d3.max(healthData, function(data) {
+        return data.smokes;
+    });
+    
+    xLinearScale.domain([xMin, xMax]);
+    yLinearScale.domain([yMin, yMax]);
+    console.log(xMin);
+    console.log(yMax);
 
     // append axes
     chartGroup.append("g")
       .attr("transform", `translate(0, ${height})`)
-      .call(xAxis);
+      .call(bottomAxis);
 
     chartGroup.append("g")
-      .call(yAxis);
+      .call(leftAxis);
 
     // append circles
     var circlesGroup = chartGroup.selectAll("circle")
-      .data(stateData)
+      .data(healthData)
       .enter()
       .append("circle")
-      .attr("cx", d => xTimeScale(d.obesity))
-      .attr("cy", d => yLinearScale(d.smokes))
-      .attr("r", "10")
-      .attr("fill", "light blue")
-      .attr("stroke-width", "1")
-      .attr("stroke", "black");
+      .classed("stateCircle", true)
+      .attr("cx", d => xLinearScale(d.obesity +1.5))
+      .attr("cy", d => yLinearScale(d.smokes +0.3))
+      .attr("r", "15")
+      .attr("fill", "blue")
+      .attr("opacity", ".5")
+      
+      .on("mouseout", function(data, indext) {
+        toolTip.hide(data);
+      });
 
-    // Step 1: Append tooltip div
-    var toolTip = d3.select("body")
-      .append("div")
-      .classed("tooltip", true);
+    //Create text labels with state abbreviations for each circle
+    circlesGroup.append("text")
+      .classed("stateText", true)
+      .attr("x", d => xLinearScale(d.obesity))
+      .attr("y", d => yLinearScale(d.smokes))
+      .attr("stroke", "black")
+      .attr("font-size", "10px")
+      .text(d => d.abbr)
 
-    // Step 2: Create "mouseover" event listener to display tooltip
-    circlesGroup.on("mouseover", function(d, i) {
-        toolTip.style("display", "block");
-        toolTip.html(`<strong>${dateFormatter(d.obesity)}<strong><hr>${d.smokes}medal(s) won`)
-          .style("left", d3.event.pageX + "px")
-          .style("top", d3.event.pageY + "px");
+    // Initialize tooltip div
+    var toolTip = d3.tip()
+      .attr("class", "tooltip")
+      .offset([80, -60])
+      .html(function(d) {
+        return (abbr + '%');
+      });
+
+    //Create tooltip in the chart
+    chartGroup.call(toolTip);
+
+    // Create event listeners to display tooltip
+    circlesGroup.on("click", function(data) {
+        toolTip.show(data);
       })
 
     // Step 3: Create "mouseout" event listener to hide tooltip
-    .on("mouseout", function() {
-        toolTip.style("display", "none");
+    .on("mouseout", function(data, index) {
+        toolTip.hide(data);
       });
-  
+    
+    // Create axes labels
+    chartGroup.append("text")
+    .style("font-size", "12px")
+    .selectAll("tspan")
+    .data(healthData)
+    .enter()
+    .append("tspan")
+      .attr("x", function(data) {
+        return xLinearScale(data.obesity +1.3);
+      })
+      .attr("y", function(data) {
+        return yLinearScale(data.smokes +1);
+      })
+      .text(function(data) {
+        return data.abbr
+      });
+
+      chartGroup.append("g")
+        .attr("transform", `translate(${width / 2}, ${height +margin.top +30})`)
+        .attr("class", "axisText")
+        .text("Obese Smokers (%");
     });
   }
   
