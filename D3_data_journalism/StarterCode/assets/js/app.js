@@ -75,67 +75,61 @@ function makeResponsive() {
       .attr("cy", d => yLinearScale(d.healthcare))
       .attr("r", "15")
       .attr("fill", "green")
-      .attr("opacity", ".5");
+      .attr("stroke-width", "1")
+      .attr("stroke", "black")
 
-    // circlesGroup.on("mouseover", function() {
-    //   d3.select(this)
-    //     .transition()
-    //     .duration(1000)
-    //     .attr("r", 20)
-    //     .attr("fill", "red");
-    // })
-    //   .on("mouseout", function() {
-    //     d3.select(this)
-    //       .transition()
-    //       .duration(1000)
-    //       .attr("r", 10)
-    //       .attr("fill", "green");
-    // })
-  //Create text labels with state abbreviations for each circle
-      circlesGroup.append("text")
-        .classed("stateText", true)
-        .attr("x", d => xLinearScale(d.poverty))
-        .attr("y", d => yLinearScale(d.healthcare))
-        .attr("stroke", "black")
-        .attr("font-size", "10px")
-        .text(d => d.abbr);
+    // Create event listeners to display tooltip
+      .on("click", function(data) {
+        toolTip.show(data, this);
+      })
 
-        // Initialize tooltip div
-        var toolTip = d3.tip()
+      .on("mouseover", function() {
+        d3.select(this)
+          .transition()
+          .duration(1000)
+          .attr("r", 30)
+          .attr("fill", "red");
+      })
+      .on("mouseout", function() {
+        d3.select(this)
+          .transition()
+          .duration(1000)
+          .attr("r", 15)
+          .attr("fill", "green")
+
+      //Create text labels with state abbreviations for each circle
+        d3.select(this)  
+          .append("text")
+          .classed("stateText", true)
+          .attr("x", d => xLinearScale(d.poverty))
+          .attr("y", d => yLinearScale(d.healthcare))
+          .attr("stroke", "black")
+          .attr("font-size", "10px")
+          .text(d => d.abbr);
+
+      // Initialize tooltip div
+      var toolTip = d3.tip()
         .attr("class", "tooltip")
         .offset([80, -60])
         .html(function(d) {
           return (`${d.state}<br>Poverty: ${d.poverty}%<br>Healthcare: ${d.healthcare}%`);
         });
-
-        //Create tooltip in the chart
-        chartGroup.call(toolTip);
-
-        // Create event listeners to display tooltip
-        circlesGroup.on("click", function(data) {
-          toolTip.show(data, this);
-        })
-      // Step 3: Create "mouseout" event listener to hide tooltip
-        .on("mouseout", function(data, index) {
-          toolTip.hide(data);
-        });
-        // Create axes labels
-      chartGroup.append("text")
-        .attr("transform", "rotate(-90)")
-        .attr("y", 0 - margin.left)
-        .attr("x", 0 - (height / 2))
-        .attr("dy", "1em")
-        .attr("class", "axisText")
-        .text("Lacks Healthcare (%)");
-
-      chartGroup.append("text")
-        .attr("transform", `translate(${width / 2}, ${height + margin.top + 30})`)
-        .attr("class", "axisText")
-        .text("In Poverty (%)");
       });
-    };
-  
-  
+      // Create axes labels
+        chartGroup.append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 0 - margin.left)
+          .attr("x", 0 - (height / 2))
+          .attr("dy", "1em")
+          .attr("class", "axisText")
+          .text("Lacks Healthcare (%)");
+      
+          chartGroup.append("text")
+            .attr("transform", `translate(${width / 2}, ${height + margin.top + 30})`)
+            .attr("class", "axisText")
+            .text("In Poverty (%)");
+      });
+};
   // When the browser loads, makeResponsive() is called.
   makeResponsive();
   
